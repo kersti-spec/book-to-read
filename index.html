@@ -1,0 +1,241 @@
+<!doctype html>
+<html lang="et">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Read something — book mood quiz</title>
+
+  <!-- StPageFlip (page-flip) styles -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/page-flip@2.0.7/dist/css/page-flip.min.css">
+  <link rel="stylesheet" href="style.css" />
+</head>
+
+<body>
+  <a class="skip-link" href="#homeTitle">Skip to content</a>
+
+  <main class="app" id="app">
+    <header class="topbar" aria-label="Header">
+      <div class="brand">
+        <div class="brand__mark" aria-hidden="true">📚</div>
+        <div class="brand__text">
+          <div class="brand__title">What to read</div>
+          <div class="brand__subtitle">5 küsimust → 1 raamat</div>
+        </div>
+      </div>
+      <div class="topbar__meta" id="topbarMeta" aria-live="polite"></div>
+    </header>
+
+    <!-- HOME -->
+    <section class="screen screen--active" id="screenHome" aria-label="Home">
+      <div class="home">
+        <div class="home__left">
+          <div class="book-preview" aria-label="Intro book">
+            <div class="book3d" id="book3d">
+              <div class="book3d__pages" aria-hidden="true"></div>
+
+              <div class="book3d__paper" aria-hidden="true">
+                <div class="paper-text">
+                  <div class="paper-kicker">Chapter 0</div>
+                  <div class="paper-title" id="homeTitle" tabindex="-1">A book for this moment</div>
+                  <p class="paper-par">
+                    See pole isiksusetest. See on “mida lugeda praegu” – viis kiiret valikut,
+                    ja siis üks raamat, millel on põhjus su tänase päeva jaoks.
+                  </p>
+                  <p class="paper-par">
+                    Saad kaane, kirjelduse, lehekülgede arvu ja hinnangulise lugemisaja.
+                  </p>
+                  <div class="paper-foot">Press Start to turn the page →</div>
+                </div>
+              </div>
+
+              <button class="book3d__cover" id="startBtn" aria-label="Start (open the book)">
+                <div class="cover__shine" aria-hidden="true"></div>
+                <div class="cover__content">
+                  <div class="cover__badge">QUIZ</div>
+                  <div class="cover__title">Read something</div>
+                  <div class="cover__subtitle">Find your next book</div>
+                  <div class="cover__line"></div>
+                  <div class="cover__cta">Start</div>
+                  <div class="cover__note">Hover / tap</div>
+                </div>
+              </button>
+
+              <div class="book3d__spine" aria-hidden="true">
+                <div class="spine__text">READ SOMETHING</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="home__actions">
+            <button class="btn" id="demoBtn" title="Täidab vastused automaatselt">Demo</button>
+            <p class="fineprint">Klaviatuur: Tab, nooled, 1–4, Enter. (Backspace = tagasi)</p>
+          </div>
+        </div>
+
+        <aside class="home__right card" aria-label="About">
+          <h2>Kuidas see töötab</h2>
+          <ol class="home__list">
+            <li>Vastad 5 küsimusele.</li>
+            <li>Me valime shortlistist parima vaste.</li>
+            <li>Tõmbame detailid Google Books API-st.</li>
+          </ol>
+          <p class="home__small">Quiz on täielikult klaviatuuriga navigeeritav.</p>
+        </aside>
+      </div>
+    </section>
+
+    <!-- QUIZ -->
+    <section class="screen" id="screenQuiz" aria-label="Quiz">
+      <div class="layout">
+        <div class="card quiz-shell">
+          <div class="quiz-top">
+            <div class="progress" id="progressText">1/5</div>
+            <div class="quiz-actions">
+              <button class="btn" id="backBtn">Back</button>
+              <button class="btn btn--primary" id="nextBtn" disabled aria-disabled="true">Next</button>
+            </div>
+          </div>
+
+          <div class="flip-wrap" aria-label="Flipbook">
+            <div class="flipbook" id="flipbook">
+              <!-- 5 spreads = 10 pages -->
+
+              <div class="my-page left-page" data-page="0" aria-hidden="true">
+                <div class="paper">
+                  <div class="paper__ornament"></div>
+                  <div class="paper__hint">Tip: <kbd>1</kbd>–<kbd>4</kbd> valib • <kbd>↑</kbd><kbd>↓</kbd> liigub •
+                    <kbd>Enter</kbd> edasi</div>
+                </div>
+              </div>
+              <div class="my-page right-page" data-page="1">
+                <div class="paper">
+                  <h2 class="question" id="q-title-0" tabindex="-1">Küsimus</h2>
+                  <div class="options" id="options-0" role="radiogroup" aria-labelledby="q-title-0"></div>
+                  <p class="error" id="error-0" role="status" aria-live="assertive"></p>
+                </div>
+              </div>
+
+              <div class="my-page left-page" data-page="2" aria-hidden="true">
+                <div class="paper">
+                  <div class="paper__ornament"></div>
+                  <div class="paper__hint">Sul on alati võimalik minna tagasi ja muuta vastust.</div>
+                </div>
+              </div>
+              <div class="my-page right-page" data-page="3">
+                <div class="paper">
+                  <h2 class="question" id="q-title-1" tabindex="-1">Küsimus</h2>
+                  <div class="options" id="options-1" role="radiogroup" aria-labelledby="q-title-1"></div>
+                  <p class="error" id="error-1" role="status" aria-live="assertive"></p>
+                </div>
+              </div>
+
+              <div class="my-page left-page" data-page="4" aria-hidden="true">
+                <div class="paper">
+                  <div class="paper__ornament"></div>
+                  <div class="paper__hint">See on “mood” valik, mitte isiksuse test.</div>
+                </div>
+              </div>
+              <div class="my-page right-page" data-page="5">
+                <div class="paper">
+                  <h2 class="question" id="q-title-2" tabindex="-1">Küsimus</h2>
+                  <div class="options" id="options-2" role="radiogroup" aria-labelledby="q-title-2"></div>
+                  <p class="error" id="error-2" role="status" aria-live="assertive"></p>
+                </div>
+              </div>
+
+              <div class="my-page left-page" data-page="6" aria-hidden="true">
+                <div class="paper">
+                  <div class="paper__ornament"></div>
+                  <div class="paper__hint">Kui sul on “reduce motion”, flip on vaiksem.</div>
+                </div>
+              </div>
+              <div class="my-page right-page" data-page="7">
+                <div class="paper">
+                  <h2 class="question" id="q-title-3" tabindex="-1">Küsimus</h2>
+                  <div class="options" id="options-3" role="radiogroup" aria-labelledby="q-title-3"></div>
+                  <p class="error" id="error-3" role="status" aria-live="assertive"></p>
+                </div>
+              </div>
+
+              <div class="my-page left-page" data-page="8" aria-hidden="true">
+                <div class="paper">
+                  <div class="paper__ornament"></div>
+                  <div class="paper__hint">Viimane küsimus. Siis otsime sulle raamatu.</div>
+                </div>
+              </div>
+              <div class="my-page right-page" data-page="9">
+                <div class="paper">
+                  <h2 class="question" id="q-title-4" tabindex="-1">Küsimus</h2>
+                  <div class="options" id="options-4" role="radiogroup" aria-labelledby="q-title-4"></div>
+                  <p class="error" id="error-4" role="status" aria-live="assertive"></p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <aside class="side card" aria-label="Help">
+          <h3>Controls</h3>
+          <ul>
+            <li><kbd>Tab</kbd> / <kbd>Shift</kbd>+<kbd>Tab</kbd> — liigu elementide vahel</li>
+            <li><kbd>↑</kbd> <kbd>↓</kbd> — valikute vahel</li>
+            <li><kbd>1</kbd>–<kbd>4</kbd> — vali kohe</li>
+            <li><kbd>Enter</kbd> / <kbd>Space</kbd> — kinnita valik</li>
+          </ul>
+          <p class="fineprint">Lehekeeramine: StPageFlip (HTML mode).</p>
+        </aside>
+      </div>
+    </section>
+
+    <!-- RESULT -->
+    <section class="screen" id="screenResult" aria-label="Result">
+      <div class="card result">
+        <div class="result__grid">
+          <div class="result__cover">
+            <img id="coverImg" alt="" />
+          </div>
+          <div class="result__info">
+            <h2 id="resTitle">—</h2>
+            <p class="meta" id="resMeta">—</p>
+
+            <div class="stats">
+              <div class="stat">
+                <div class="stat__label">Leheküljed</div>
+                <div class="stat__value" id="resPages">—</div>
+              </div>
+              <div class="stat">
+                <div class="stat__label">Lugemisaeg</div>
+                <div class="stat__value" id="resTime">—</div>
+              </div>
+            </div>
+
+            <div class="desc">
+              <p id="resDesc"></p>
+              <button class="linkbtn" id="toggleDescBtn" aria-expanded="false">Show more</button>
+            </div>
+
+            <div class="result__actions">
+              <a class="btn" id="infoLink" target="_blank" rel="noreferrer noopener">Open</a>
+              <button class="btn" id="againBtn">Try again</button>
+              <button class="btn btn--primary" id="anotherBtn">Another pick</button>
+            </div>
+
+            <p class="fineprint" id="fallbackNote" hidden>
+              Märkus: kui Google Books ei tagasta mõnd välja (lk/kirjeldus), näitame seda, mis olemas on.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <footer class="footer">
+      <span>Built for keyboard + mobile.</span>
+    </footer>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/page-flip@2.0.7/dist/js/page-flip.browser.min.js"></script>
+  <script src="app.js"></script>
+</body>
+
+</html>
