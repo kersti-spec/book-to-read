@@ -55,6 +55,7 @@ const els = {
   topbarMeta: document.getElementById("topbarMeta"),
 
   startBtn: document.getElementById("startBtn"),
+  startInlineBtn: document.getElementById("startInlineBtn"),
   demoBtn: document.getElementById("demoBtn"),
   backBtn: document.getElementById("backBtn"),
   nextBtn: document.getElementById("nextBtn"),
@@ -90,6 +91,7 @@ let pageFlip = null;
 function prefersReducedMotion(){
   return window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 }
+function clamp(n,a,b){ return Math.max(a, Math.min(b,n)); }
 
 function showScreen(name){
   state.screen = name;
@@ -106,27 +108,36 @@ function updateTopbar(){
   else els.topbarMeta.textContent = "";
 }
 
-function clamp(n,a,b){ return Math.max(a, Math.min(b,n)); }
-
 function initFlip(){
   if (pageFlip) return;
+
   const reduced = prefersReducedMotion();
   pageFlip = new St.PageFlip(els.flipbook, {
-    width: 460, height: 590, size: "stretch",
-    minWidth: 320, maxWidth: 980, minHeight: 430, maxHeight: 680,
-    drawShadow: !reduced, maxShadowOpacity: reduced ? 0.15 : 0.6,
+    width: 460,
+    height: 590,
+    size: "stretch",
+    minWidth: 320,
+    maxWidth: 980,
+    minHeight: 430,
+    maxHeight: 680,
+    drawShadow: !reduced,
+    maxShadowOpacity: reduced ? 0.15 : 0.6,
     flippingTime: reduced ? 350 : 900,
     usePortrait: true,
     autoSize: true,
     mobileScrollSupport: true,
-    showCover: false
+    showCover: false,
+    startPage: 1
   });
+
   const pages = Array.from(document.querySelectorAll(".my-page"));
   pageFlip.loadFromHTML(pages);
 
   pageFlip.on("flip", () => syncFromPage(pageFlip.getCurrentPageIndex()));
+
+  // robust state: "flipping" only when actually flipping
   pageFlip.on("changeState", (e) => {
-    state.isFlipping = ["flipping","fold_corner","user_fold"].includes(e.data);
+    state.isFlipping = (e?.data === "flipping");
     updateNav();
   });
 }
@@ -140,20 +151,15 @@ function syncFromPage(pageIndex){
   focusQuestion();
 }
 
-function flipToStep(step){
-  if (!pageFlip) return;
-  state.isFlipping = true;
-  updateNav();
-  pageFlip.flip(step*2, "bottom");
-}
-
 function buildQuestions(){
   QUESTIONS.forEach((q,i)=>{
     const title = document.getElementById(`q-title-${i}`);
     const group = document.getElementById(`options-${i}`);
     if (!title || !group) return;
+
     title.textContent = q.text;
     group.innerHTML = "";
+
     q.options.forEach((label, idx)=>{
       const key = String.fromCharCode(65+idx);
       const btn = document.createElement("button");
@@ -166,7 +172,7 @@ function buildQuestions(){
       btn.setAttribute("aria-checked","false");
       btn.tabIndex=-1;
       btn.innerHTML = `<span class="option__key">${key}</span> ${label}`;
-      btn.addEventListener("click", ()=>{ if (!state.isFlipping) setAnswer(i, idx, true); });
+      btn.addEventListener("click", ()=> setAnswer(i, idx, true));
       group.appendChild(btn);
     });
   });
@@ -197,17 +203,20 @@ function refreshTabbables(){
   for (let i=0;i<QUESTIONS.length;i++){
     const group = document.getElementById(`options-${i}`);
     if (!group) continue;
+
     const radios = Array.from(group.querySelectorAll('[role="radio"]'));
     const active = i===state.step;
+
     if (!active){
       radios.forEach(r=>r.tabIndex=-1);
       group.setAttribute("aria-hidden","true");
       continue;
     }
+
     group.removeAttribute("aria-hidden");
     const selected = state.answers[QUESTIONS[i].id];
     const selectedIdx = selected ? selected.charCodeAt(0)-65 : null;
-    const idx = selectedIdx!==null ? selectedIdx : (state.activeOptionIndex||0);
+    const idx = selectedIdx!==null ? selectedIdx : (state.activeOptionIndex || 0);
     radios.forEach((r,j)=>r.tabIndex = (j===idx)?0:-1);
   }
 }
@@ -226,9 +235,17 @@ function updateNav(){
 
   const q = QUESTIONS[state.step];
   const has = Boolean(state.answers[q.id]);
+
   els.nextBtn.disabled = state.isFlipping || !has;
   els.nextBtn.setAttribute("aria-disabled", String(els.nextBtn.disabled));
   els.nextBtn.textContent = (state.step===QUESTIONS.length-1) ? "Finish" : "Next";
+}
+
+function turnBySpread(delta){
+  if (!pageFlip) return;
+  const i = pageFlip.getCurrentPageIndex();
+  const target = clamp(i + delta, 0, pageFlip.getPageCount() - 1);
+  pageFlip.turnToPage(target);
 }
 
 function goNext(){
@@ -239,18 +256,25 @@ function goNext(){
     document.querySelector(`#options-${state.step} [role="radio"]`)?.focus();
     return;
   }
-  if (state.step < QUESTIONS.length-1) flipToStep(state.step+1);
-  else finishQuiz();
+
+  if (state.step < QUESTIONS.length - 1){
+    turnBySpread(2);
+  } else {
+    finishQuiz();
+  }
 }
 
 function goBack(){
-  if (state.step>0) flipToStep(state.step-1);
+  if (state.step > 0) turnBySpread(-2);
 }
 
 function onKeyDown(e){
-  if (state.screen!=="quiz" || state.isFlipping) return;
+  if (state.screen!=="quiz") return;
+  if (state.isFlipping) return;
 
   const group = document.getElementById(`options-${state.step}`);
+  if (!group) return;
+
   const radios = Array.from(group.querySelectorAll('[role="radio"]'));
   const inGroup = group.contains(document.activeElement);
 
@@ -260,6 +284,7 @@ function onKeyDown(e){
     if (radios[idx]) setAnswer(state.step, idx, false);
     return;
   }
+
   if (inGroup && ["ArrowDown","ArrowUp","ArrowLeft","ArrowRight"].includes(e.key)){
     e.preventDefault();
     let idx = state.activeOptionIndex ?? 0;
@@ -268,11 +293,13 @@ function onKeyDown(e){
     setAnswer(state.step, idx, false);
     return;
   }
+
   if (e.key==="Enter" && inGroup){
     e.preventDefault();
     goNext();
     return;
   }
+
   if (e.key==="Backspace" && state.step>0){
     e.preventDefault();
     goBack();
@@ -470,18 +497,23 @@ function startQuiz(withDemo){
     }
     state.activeOptionIndex=0;
   }
-  pageFlip.turnToPage(0);
-  syncFromPage(0);
+
+  // mine kohe esimese küsimuse lehele (parem leht)
+  pageFlip.turnToPage(1);
+  syncFromPage(1);
   applySelections();
 }
 
-els.startBtn.addEventListener("click", ()=>openHomeBookAndStart(false));
-els.demoBtn.addEventListener("click", ()=>openHomeBookAndStart(true));
-els.backBtn.addEventListener("click", goBack);
-els.nextBtn.addEventListener("click", goNext);
+/* ---- Events ---- */
+els.startBtn?.addEventListener("click", ()=>openHomeBookAndStart(false));
+els.startInlineBtn?.addEventListener("click", ()=>openHomeBookAndStart(false));
+els.demoBtn?.addEventListener("click", ()=>openHomeBookAndStart(true));
+
+els.backBtn?.addEventListener("click", goBack);
+els.nextBtn?.addEventListener("click", goNext);
 document.addEventListener("keydown", onKeyDown);
 
-els.toggleDescBtn.addEventListener("click", ()=>{
+els.toggleDescBtn?.addEventListener("click", ()=>{
   const full = els.resDesc.dataset.full || "";
   const expanded = els.toggleDescBtn.getAttribute("aria-expanded")==="true";
   if (expanded){
@@ -495,13 +527,13 @@ els.toggleDescBtn.addEventListener("click", ()=>{
   }
 });
 
-els.againBtn.addEventListener("click", ()=>{
+els.againBtn?.addEventListener("click", ()=>{
   if (els.book3d) els.book3d.classList.remove("is-open");
   resetQuiz();
   showScreen("home");
   document.getElementById("homeTitle")?.focus();
 });
 
-els.anotherBtn.addEventListener("click", ()=>finishQuiz(state.lastChosenId));
+els.anotherBtn?.addEventListener("click", ()=>finishQuiz(state.lastChosenId));
 
 showScreen("home");
