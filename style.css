@@ -546,3 +546,9 @@ a{color:inherit}
   margin-top: 10px;           /* et hingaks nagu intro */
   font-family: ui-sans-serif, system-ui;
 }
+/* Center Quiz like Home (so it doesn't sit "under" the book) */
+#screenQuiz.screen--active{
+  min-height: calc(100vh - 120px);
+  display: grid;
+  place-items: center;
+}

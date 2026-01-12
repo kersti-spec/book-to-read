@@ -1,5 +1,14 @@
-// Flipbook quiz + Google Books result.
-// Starts directly on the Quiz screen (no Home screen).
+/* =========================================================
+   Flipbook quiz + Google Books result.
+   FIXED VERSION (FULL FILE)
+
+   What this fixes fast:
+   - Quiz was rendering "way below" because Home stayed active / layout stacked.
+   - Removes conflicting auto-start + stray home calls.
+   - Start works from Home (cover/start button) -> Quiz.
+   - PageFlip loads ONLY pages inside #flipbook.
+   - Keeps your existing scoring + result logic intact.
+========================================================= */
 
 const QUESTIONS = [
   { id: "q1", text: "Kuidas sa tahad, et see raamat sind tunneks paneks?", options: ["Rahulikult mõtlema","Natuke ärevaks, aga põnevil","Lohtuma ja hoituna","Uudishimulikuks ja erksaks"]},
@@ -49,14 +58,24 @@ const SHORTLIST = [
 ];
 
 const els = {
+  // Screens
+  screenHome: document.getElementById("screenHome"),
   screenQuiz: document.getElementById("screenQuiz"),
   screenResult: document.getElementById("screenResult"),
+
+  // Home start buttons (if present)
+  startBtn: document.getElementById("startBtn"),
+  startInlineBtn: document.getElementById("startInlineBtn"),
+
+  // Topbar
   topbarMeta: document.getElementById("topbarMeta"),
 
+  // Quiz controls
   backBtn: document.getElementById("backBtn"),
   nextBtn: document.getElementById("nextBtn"),
   progressText: document.getElementById("progressText"),
 
+  // Result elements
   coverImg: document.getElementById("coverImg"),
   resTitle: document.getElementById("resTitle"),
   resMeta: document.getElementById("resMeta"),
@@ -69,11 +88,12 @@ const els = {
   anotherBtn: document.getElementById("anotherBtn"),
   fallbackNote: document.getElementById("fallbackNote"),
 
+  // Flipbook root
   flipbook: document.getElementById("flipbook")
 };
 
 const state = {
-  screen: "quiz",
+  screen: "home",
   step: 0,
   answers: {},
   isFlipping: false,
@@ -88,27 +108,34 @@ function prefersReducedMotion(){
 }
 function clamp(n,a,b){ return Math.max(a, Math.min(b,n)); }
 
+function showScreen(name){
+  [els.screenHome, els.screenQuiz, els.screenResult].forEach(s => s?.classList.remove("screen--active"));
+  if (name === "home") els.screenHome?.classList.add("screen--active");
+  if (name === "quiz") els.screenQuiz?.classList.add("screen--active");
+  if (name === "result") els.screenResult?.classList.add("screen--active");
+  state.screen = name;
+  window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+}
+
+function updateTopbar(){
+  if (!els.topbarMeta) return;
+  if (state.screen === "quiz") els.topbarMeta.textContent = `Question ${state.step+1} of ${QUESTIONS.length}`;
+  else if (state.screen === "result") els.topbarMeta.textContent = "Result";
+  else els.topbarMeta.textContent = "";
+}
+
 function showOnlyQuiz(){
-  state.screen = "quiz";
-  els.screenQuiz.classList.add("screen--active");
-  els.screenResult.classList.remove("screen--active");
+  showScreen("quiz");
   updateTopbar();
 }
 
 function showResult(){
-  state.screen = "result";
-  els.screenQuiz.classList.remove("screen--active");
-  els.screenResult.classList.add("screen--active");
+  showScreen("result");
   updateTopbar();
 }
 
-function updateTopbar(){
-  if (state.screen === "quiz") els.topbarMeta.textContent = `Question ${state.step+1} of ${QUESTIONS.length}`;
-  else els.topbarMeta.textContent = "Result";
-}
-
 function initFlip(){
-  if (pageFlip) return;
+  if (pageFlip || !els.flipbook) return;
 
   const reduced = prefersReducedMotion();
   pageFlip = new St.PageFlip(els.flipbook, {
@@ -129,7 +156,8 @@ function initFlip(){
     startPage: 1
   });
 
-  const pages = Array.from(document.querySelectorAll(".my-page"));
+  // ✅ IMPORTANT: load only pages inside the flipbook
+  const pages = Array.from(els.flipbook.querySelectorAll(".my-page"));
   pageFlip.loadFromHTML(pages);
 
   pageFlip.on("flip", () => syncFromPage(pageFlip.getCurrentPageIndex()));
@@ -149,6 +177,7 @@ function syncFromPage(pageIndex){
 }
 
 function buildQuestions(){
+  // Quiz pages
   QUESTIONS.forEach((q,i)=>{
     const title = document.getElementById(`q-title-${i}`);
     const group = document.getElementById(`options-${i}`);
@@ -158,7 +187,7 @@ function buildQuestions(){
     group.innerHTML = "";
 
     q.options.forEach((label, idx)=>{
-      const key = String.fromCharCode(65+idx);
+      const key = String.fromCharCode(65+idx); // internal A-D
       const btn = document.createElement("button");
       btn.type="button";
       btn.className="option";
@@ -174,7 +203,7 @@ function buildQuestions(){
     });
   });
 
-    // ALSO build the first question on the HOME right page (behind the cover)
+  // Optional Home preview (if your home has these ids)
   const homeTitle = document.getElementById("home-q-title-0");
   const homeGroup = document.getElementById("home-options-0");
   if (homeTitle && homeGroup) {
@@ -196,25 +225,19 @@ function buildQuestions(){
       btn.innerHTML = `<span class="option__key">${key}</span> ${label}`;
 
       btn.addEventListener("click", () => {
-        // Save answer like normal
         state.answers[QUESTIONS[0].id] = key;
 
-        // Update aria states in home
         const radios = Array.from(homeGroup.querySelectorAll('[role="radio"]'));
         radios.forEach((el, j) => {
           const checked = j === idx;
           el.setAttribute("aria-checked", checked ? "true" : "false");
           el.tabIndex = checked ? 0 : -1;
         });
-
-        // Enable start (optional)
-        els.startBtn?.focus();
       });
 
       homeGroup.appendChild(btn);
     });
   }
-
 }
 
 function setAnswer(stepIndex, optionIndex, fromMouse){
@@ -224,7 +247,9 @@ function setAnswer(stepIndex, optionIndex, fromMouse){
   state.activeOptionIndex = optionIndex;
 
   const group = document.getElementById(`options-${stepIndex}`);
+  if (!group) return;
   const radios = Array.from(group.querySelectorAll('[role="radio"]'));
+
   radios.forEach((el, idx)=>{
     const checked = idx===optionIndex;
     el.setAttribute("aria-checked", checked ? "true" : "false");
@@ -265,10 +290,13 @@ function focusQuestion(){
 }
 
 function updateProgress(){
+  if (!els.progressText) return;
   els.progressText.textContent = `${state.step+1}/${QUESTIONS.length}`;
 }
 
 function updateNav(){
+  if (!els.backBtn || !els.nextBtn) return;
+
   els.backBtn.disabled = state.step===0 || state.isFlipping;
   els.backBtn.setAttribute("aria-disabled", String(els.backBtn.disabled));
 
@@ -426,17 +454,21 @@ function truncate(s,n){ return s.length>n ? s.slice(0,n).trimEnd()+"…" : s; }
 async function finishQuiz(avoidId=null){
   showResult();
 
-  els.resTitle.textContent="Loading…";
-  els.resMeta.textContent="";
-  els.resPages.textContent="—";
-  els.resTime.textContent="—";
-  els.resDesc.textContent="";
-  els.coverImg.removeAttribute("src");
-  els.coverImg.alt="";
-  els.infoLink.href="#";
-  els.infoLink.style.pointerEvents="none";
-  els.infoLink.style.opacity=".55";
-  els.fallbackNote.hidden=true;
+  if (els.resTitle) els.resTitle.textContent="Loading…";
+  if (els.resMeta) els.resMeta.textContent="";
+  if (els.resPages) els.resPages.textContent="—";
+  if (els.resTime) els.resTime.textContent="—";
+  if (els.resDesc) els.resDesc.textContent="";
+  if (els.coverImg){
+    els.coverImg.removeAttribute("src");
+    els.coverImg.alt="";
+  }
+  if (els.infoLink){
+    els.infoLink.href="#";
+    els.infoLink.style.pointerEvents="none";
+    els.infoLink.style.opacity=".55";
+  }
+  if (els.fallbackNote) els.fallbackNote.hidden=true;
 
   const chosen = pickBook(avoidId);
   state.lastChosenId = chosen.id;
@@ -459,35 +491,42 @@ function renderResult(book){
   const desc = stripHtml(book.description||"");
   const hours = estimateHours(book.pages);
 
-  els.resTitle.textContent = book.title;
-  els.resMeta.textContent = `${book.author}${book.year && book.year!=="—" ? " • "+book.year : ""}`;
-  els.resPages.textContent = book.pages ? String(book.pages) : "—";
-  els.resTime.textContent = hours ? `~${hours} h` : "—";
+  if (els.resTitle) els.resTitle.textContent = book.title;
+  if (els.resMeta) els.resMeta.textContent = `${book.author}${book.year && book.year!=="—" ? " • "+book.year : ""}`;
+  if (els.resPages) els.resPages.textContent = book.pages ? String(book.pages) : "—";
+  if (els.resTime) els.resTime.textContent = hours ? `~${hours} h` : "—";
 
-  els.resDesc.dataset.full = desc;
-  els.resDesc.textContent = truncate(desc, 420);
+  if (els.resDesc){
+    els.resDesc.dataset.full = desc;
+    els.resDesc.textContent = truncate(desc, 420);
+  }
 
-  els.toggleDescBtn.hidden = desc.length <= 420;
-  els.toggleDescBtn.textContent = "Show more";
-  els.toggleDescBtn.setAttribute("aria-expanded","false");
+  if (els.toggleDescBtn){
+    els.toggleDescBtn.hidden = desc.length <= 420;
+    els.toggleDescBtn.textContent = "Show more";
+    els.toggleDescBtn.setAttribute("aria-expanded","false");
+  }
 
-  if (book.cover){
+  if (els.coverImg && book.cover){
     els.coverImg.src = book.cover;
     els.coverImg.alt = `Book cover of ${book.title}`;
   }
 
-  if (book.infoLink){
+  if (els.infoLink && book.infoLink){
     els.infoLink.href = book.infoLink;
     els.infoLink.style.pointerEvents="auto";
     els.infoLink.style.opacity="1";
   }
 
-  els.fallbackNote.hidden=false;
-  els.resTitle.tabIndex=-1;
-  els.resTitle.focus();
+  if (els.fallbackNote) els.fallbackNote.hidden=false;
+
+  if (els.resTitle){
+    els.resTitle.tabIndex=-1;
+    els.resTitle.focus();
+  }
 }
 
-/* ---- Start (direct) ---- */
+/* ---- Start / Reset ---- */
 function resetQuiz(){
   state.step=0;
   state.answers={};
@@ -513,9 +552,12 @@ function applySelections(){
 function startDirectQuiz(){
   resetQuiz();
   showOnlyQuiz();
-  initFlip();
-  buildQuestions();
 
+  // build then flip
+  buildQuestions();
+  initFlip();
+
+  // first question page
   pageFlip.turnToPage(1);
   syncFromPage(1);
   applySelections();
@@ -527,14 +569,14 @@ els.nextBtn?.addEventListener("click", goNext);
 document.addEventListener("keydown", onKeyDown);
 
 els.toggleDescBtn?.addEventListener("click", ()=>{
-  const full = els.resDesc.dataset.full || "";
+  const full = els.resDesc?.dataset.full || "";
   const expanded = els.toggleDescBtn.getAttribute("aria-expanded")==="true";
   if (expanded){
-    els.resDesc.textContent = truncate(full, 420);
+    if (els.resDesc) els.resDesc.textContent = truncate(full, 420);
     els.toggleDescBtn.textContent="Show more";
     els.toggleDescBtn.setAttribute("aria-expanded","false");
   } else {
-    els.resDesc.textContent = full;
+    if (els.resDesc) els.resDesc.textContent = full;
     els.toggleDescBtn.textContent="Show less";
     els.toggleDescBtn.setAttribute("aria-expanded","true");
   }
@@ -547,16 +589,25 @@ els.againBtn?.addEventListener("click", ()=>{
 
 els.anotherBtn?.addEventListener("click", ()=>finishQuiz(state.lastChosenId));
 
-document.addEventListener("DOMContentLoaded", startDirectQuiz);
+/* ---- BOOT ---- */
+document.addEventListener("DOMContentLoaded", ()=>{
+  // Start on Home (cover)
+  showScreen("home");
+  updateTopbar();
 
-showScreen("home");
-buildQuestions();
+  // If you have a home preview question, this will populate it (safe if not present)
+  buildQuestions();
 
-document.addEventListener("keydown", (e) => {
-  if (state.screen !== "home") return;
-  if (e.key === "Enter") {
-    e.preventDefault();
-    els.startBtn?.click();
-  }
+  // Start buttons (safe if not present)
+  els.startBtn?.addEventListener("click", startDirectQuiz);
+  els.startInlineBtn?.addEventListener("click", startDirectQuiz);
+
+  // Enter starts from Home
+  document.addEventListener("keydown", (e)=>{
+    if (state.screen !== "home") return;
+    if (e.key === "Enter"){
+      e.preventDefault();
+      startDirectQuiz();
+    }
+  });
 });
-
