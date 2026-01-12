@@ -30,6 +30,16 @@ body{
     var(--bg);
 }
 
+/* Center the whole app on the page */
+.stage{
+  min-height: 100vh;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  padding: 24px;
+}
+
+
 a{color:inherit}
 
 /* Accessibility */
@@ -350,85 +360,7 @@ a{color:inherit}
   .book-preview:hover .book3d__cover{transform:none}
 }
 
-/* ================================
-   Quiz layout — REPLACED
-   stage + raamat keskele, ilma klaaskaardita
-================================== */
-.layout{
-  display:grid;
-  grid-template-columns: 1fr;
-  gap: 0;
-  justify-items: center;
-  align-items: start;
-}
 
-/* eemaldame “app card shell” ümbert */
-.quiz-shell{
-  padding: 0;
-  background: transparent;
-  border: none;
-  box-shadow: none;
-  backdrop-filter: none;
-}
-
-/* ülemine riba: vaikne ja kerge */
-.quiz-top{
-  width: min(980px, 100%);
-  display:flex;
-  justify-content: space-between;
-  align-items:center;
-  gap: 12px;
-  padding: 6px 4px 10px;
-  margin: 0;
-}
-
-.progress{
-  font-size: 12px;
-  letter-spacing: .10em;
-  text-transform: uppercase;
-  color: rgba(255,255,255,.65);
-  font-weight: 950;
-}
-
-/* Back/Next nupud pehmemaks */
-.quiz-actions{
-  display:flex;
-  gap: 10px;
-}
-
-.quiz-actions .btn{
-  background: rgba(255,255,255,.05);
-  border-color: rgba(255,255,255,.12);
-  border-radius: 999px;
-  padding: 8px 12px;
-  min-height: 38px;
-}
-
-.quiz-actions .btn--primary{
-  background: rgba(255,255,255,.08);
-  border-color: rgba(255,255,255,.18);
-}
-
-/* flipbook keskele nagu “raamat laual” */
-.flip-wrap{
-  display:flex;
-  justify-content:center;
-  width: 100%;
-  padding: 10px 0 0;
-  overflow: visible;
-}
-
-/* raamat ise: vari + radius */
-.flipbook{
-  width: min(980px, 100%);
-  height: min(620px, 72vh);
-  margin: 0 auto;
-  border-radius: 18px;
-  box-shadow: 0 22px 70px rgba(0,0,0,.55);
-}
-/* ================================
-   End Quiz layout replacement
-================================== */
 
 .my-page{
   background:linear-gradient(90deg,var(--paper),var(--paper2));
@@ -574,3 +506,43 @@ a{color:inherit}
 .quiz-actions, .paper-start { pointer-events: auto; }
 
 
+.paper-foot__hint{
+  font-family: ui-sans-serif,system-ui;
+  font-weight: 800;
+  font-size: 12px;
+  color: rgba(0,0,0,.55);
+}
+
+/* Quiz pages: paper-text should behave like full page content */
+.my-page .paper-text{
+  height:100%;
+  display:flex;
+  flex-direction:column;
+  padding:18px 18px 16px;
+}
+.paper-foot{ margin-top:auto; }
+.paper-foot__hint{
+  font-family: ui-sans-serif,system-ui;
+  font-weight: 800;
+  font-size: 12px;
+  color: rgba(0,0,0,.55);
+}
+
+
+/* Make quiz question typography match the intro paper-text style */
+#screenQuiz .paper{
+  color: var(--ink);
+  font-family: ui-serif, Georgia, "Times New Roman", Times, serif;
+}
+
+#screenQuiz .question{
+  font-size: 28px;            /* sama suurus nagu .paper-title */
+  font-weight: 900;
+  letter-spacing: -.4px;      /* sama vibe nagu intro */
+  margin: 0;
+}
+
+#screenQuiz .options{
+  margin-top: 10px;           /* et hingaks nagu intro */
+  font-family: ui-sans-serif, system-ui;
+}

@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Read something — book mood quiz</title>
 
-  <!-- StPageFlip (page-flip) styles -->
+  <!-- StPageFlip styles -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/page-flip@2.0.7/dist/css/page-flip.min.css">
   <link rel="stylesheet" href="style.css" />
 </head>
@@ -20,18 +20,22 @@
         <div class="topbar__meta" id="topbarMeta" aria-live="polite"></div>
       </header>
 
-      <!-- HOME -->
+      <!-- =========================
+           HOME (3D BOOK COVER)
+      ========================== -->
       <section class="screen screen--active" id="screenHome" aria-label="Home">
         <div class="home">
           <div class="home__left">
             <div class="book-preview" aria-label="Intro book">
               <div class="book3d" id="book3d">
+
                 <div class="book3d__pages" aria-hidden="true"></div>
 
                 <div class="book3d__paper" aria-hidden="true">
                   <div class="paper-text">
                     <div class="paper-kicker">Chapter 0</div>
                     <div class="paper-title" id="homeTitle" tabindex="-1">A book for this moment</div>
+
                     <p class="paper-par">
                       See pole isiksusetest. See on “mida lugeda praegu” – viis kiiret valikut,
                       ja siis üks raamat, millel on põhjus su tänase päeva jaoks.
@@ -39,6 +43,8 @@
                     <p class="paper-par">
                       Saad kaane, kirjelduse, lehekülgede arvu ja hinnangulise lugemisaja.
                     </p>
+
+                    <!-- Start nupp paremal (paberi peal) -->
                     <div class="paper-foot">
                       <button class="paper-start" id="startInlineBtn" type="button">
                         Start →
@@ -47,7 +53,8 @@
                   </div>
                 </div>
 
-                <button class="book3d__cover" id="startBtn" aria-label="Start (open the book)">
+                <!-- KAAS / START -->
+                <button class="book3d__cover" id="startBtn" type="button" aria-label="Start (open the book)">
                   <div class="cover__shine" aria-hidden="true"></div>
                   <div class="cover__content">
                     <div class="cover__badge">QUIZ</div>
@@ -55,27 +62,32 @@
                     <div class="cover__subtitle">Find your next book</div>
                     <div class="cover__line"></div>
                     <div class="cover__cta">Start</div>
-                    <div class="cover__note">Hover / tap</div>
+                    <div class="cover__note">Hover / Enter</div>
                   </div>
                 </button>
 
                 <div class="book3d__spine" aria-hidden="true">
                   <div class="spine__text">READ SOMETHING</div>
                 </div>
+
               </div>
             </div>
 
             <div class="home__actions">
-              <button class="btn" id="demoBtn" title="Täidab vastused automaatselt">Demo</button>
+              <button class="btn" id="demoBtn" type="button" title="Täidab vastused automaatselt">Demo</button>
               <p class="fineprint">Klaviatuur: Tab, nooled, 1–4, Enter. (Backspace = tagasi)</p>
             </div>
           </div>
         </div>
       </section>
 
-      <!-- QUIZ -->
+      <!-- =========================
+           QUIZ (FLIPBOOK)
+      ========================== -->
       <section class="screen" id="screenQuiz" aria-label="Quiz">
         <div class="layout">
+          <!-- NB: kui sa tahtsid “ilma suure klaaskaardita”, siis hiljem võtame .card maha.
+               Praegu hoian struktuuri töötavana. -->
           <div class="card quiz-shell">
             <div class="quiz-top">
               <div class="progress" id="progressText">1/5</div>
@@ -87,15 +99,17 @@
 
             <div class="flip-wrap" aria-label="Flipbook">
               <div class="flipbook" id="flipbook">
-                <!-- 5 spreads = 10 pages -->
+
+                <!-- Spread 1 -->
                 <div class="my-page left-page" data-page="0" aria-hidden="true">
                   <div class="paper">
                     <div class="paper__ornament"></div>
-                    <div class="paper__hint">Tip: <kbd>1</kbd>–<kbd>4</kbd> valib • <kbd>↑</kbd><kbd>↓</kbd> liigub •
-                      <kbd>Enter</kbd> edasi
+                    <div class="paper__hint">
+                      Tip: <kbd>1</kbd>–<kbd>4</kbd> valib • <kbd>↑</kbd><kbd>↓</kbd> liigub • <kbd>Enter</kbd> edasi
                     </div>
                   </div>
                 </div>
+
                 <div class="my-page right-page" data-page="1">
                   <div class="paper">
                     <h2 class="question" id="q-title-0" tabindex="-1">Küsimus</h2>
@@ -104,11 +118,13 @@
                   </div>
                 </div>
 
+                <!-- Spread 2 -->
                 <div class="my-page left-page" data-page="2" aria-hidden="true">
                   <div class="paper">
                     <div class="paper__ornament"></div>
                   </div>
                 </div>
+
                 <div class="my-page right-page" data-page="3">
                   <div class="paper">
                     <h2 class="question" id="q-title-1" tabindex="-1">Küsimus</h2>
@@ -117,11 +133,13 @@
                   </div>
                 </div>
 
+                <!-- Spread 3 -->
                 <div class="my-page left-page" data-page="4" aria-hidden="true">
                   <div class="paper">
                     <div class="paper__ornament"></div>
                   </div>
                 </div>
+
                 <div class="my-page right-page" data-page="5">
                   <div class="paper">
                     <h2 class="question" id="q-title-2" tabindex="-1">Küsimus</h2>
@@ -130,11 +148,13 @@
                   </div>
                 </div>
 
+                <!-- Spread 4 -->
                 <div class="my-page left-page" data-page="6" aria-hidden="true">
                   <div class="paper">
                     <div class="paper__ornament"></div>
                   </div>
                 </div>
+
                 <div class="my-page right-page" data-page="7">
                   <div class="paper">
                     <h2 class="question" id="q-title-3" tabindex="-1">Küsimus</h2>
@@ -143,11 +163,13 @@
                   </div>
                 </div>
 
+                <!-- Spread 5 -->
                 <div class="my-page left-page" data-page="8" aria-hidden="true">
                   <div class="paper">
                     <div class="paper__ornament"></div>
                   </div>
                 </div>
+
                 <div class="my-page right-page" data-page="9">
                   <div class="paper">
                     <h2 class="question" id="q-title-4" tabindex="-1">Küsimus</h2>
@@ -159,14 +181,20 @@
               </div>
             </div>
           </div>
+
+          <!-- kui sa tahad juhised ära võtta, kustutame selle hiljem -->
         </div>
       </section>
 
-      <!-- RESULT -->
+      <!-- =========================
+           RESULT
+      ========================== -->
       <section class="screen" id="screenResult" aria-label="Result">
         <div class="card result">
           <div class="result__grid">
-            <div class="result__cover"><img id="coverImg" alt="" /></div>
+            <div class="result__cover">
+              <img id="coverImg" alt="" />
+            </div>
             <div class="result__info">
               <h2 id="resTitle">—</h2>
               <p class="meta" id="resMeta">—</p>
@@ -209,6 +237,18 @@
 
   <script src="https://cdn.jsdelivr.net/npm/page-flip@2.0.7/dist/js/page-flip.browser.min.js"></script>
   <script src="app.js"></script>
+
+  <!-- ✅ Enter opens the cover (delegates to startBtn click) -->
+  <script>
+    document.addEventListener("keydown", (e) => {
+      // Enter on home → open
+      const homeActive = document.getElementById("screenHome")?.classList.contains("screen--active");
+      if (homeActive && e.key === "Enter") {
+        e.preventDefault();
+        document.getElementById("startBtn")?.click();
+      }
+    });
+  </script>
 </body>
 
 </html>

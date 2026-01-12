@@ -1,5 +1,5 @@
 // Flipbook quiz + Google Books result.
-// Home page uses a 3D hinged cover opening animation (CSS) before starting.
+// Starts directly on the Quiz screen (no Home screen).
 
 const QUESTIONS = [
   { id: "q1", text: "Kuidas sa tahad, et see raamat sind tunneks paneks?", options: ["Rahulikult mõtlema","Natuke ärevaks, aga põnevil","Lohtuma ja hoituna","Uudishimulikuks ja erksaks"]},
@@ -49,14 +49,10 @@ const SHORTLIST = [
 ];
 
 const els = {
-  screenHome: document.getElementById("screenHome"),
   screenQuiz: document.getElementById("screenQuiz"),
   screenResult: document.getElementById("screenResult"),
   topbarMeta: document.getElementById("topbarMeta"),
 
-  startBtn: document.getElementById("startBtn"),
-  startInlineBtn: document.getElementById("startInlineBtn"),
-  demoBtn: document.getElementById("demoBtn"),
   backBtn: document.getElementById("backBtn"),
   nextBtn: document.getElementById("nextBtn"),
   progressText: document.getElementById("progressText"),
@@ -73,12 +69,11 @@ const els = {
   anotherBtn: document.getElementById("anotherBtn"),
   fallbackNote: document.getElementById("fallbackNote"),
 
-  book3d: document.getElementById("book3d"),
   flipbook: document.getElementById("flipbook")
 };
 
 const state = {
-  screen: "home",
+  screen: "quiz",
   step: 0,
   answers: {},
   isFlipping: false,
@@ -93,19 +88,23 @@ function prefersReducedMotion(){
 }
 function clamp(n,a,b){ return Math.max(a, Math.min(b,n)); }
 
-function showScreen(name){
-  state.screen = name;
-  [els.screenHome, els.screenQuiz, els.screenResult].forEach(s => s.classList.remove("screen--active"));
-  if (name === "home") els.screenHome.classList.add("screen--active");
-  if (name === "quiz") els.screenQuiz.classList.add("screen--active");
-  if (name === "result") els.screenResult.classList.add("screen--active");
+function showOnlyQuiz(){
+  state.screen = "quiz";
+  els.screenQuiz.classList.add("screen--active");
+  els.screenResult.classList.remove("screen--active");
+  updateTopbar();
+}
+
+function showResult(){
+  state.screen = "result";
+  els.screenQuiz.classList.remove("screen--active");
+  els.screenResult.classList.add("screen--active");
   updateTopbar();
 }
 
 function updateTopbar(){
   if (state.screen === "quiz") els.topbarMeta.textContent = `Question ${state.step+1} of ${QUESTIONS.length}`;
-  else if (state.screen === "result") els.topbarMeta.textContent = "Result";
-  else els.topbarMeta.textContent = "";
+  else els.topbarMeta.textContent = "Result";
 }
 
 function initFlip(){
@@ -134,8 +133,6 @@ function initFlip(){
   pageFlip.loadFromHTML(pages);
 
   pageFlip.on("flip", () => syncFromPage(pageFlip.getCurrentPageIndex()));
-
-  // robust state: "flipping" only when actually flipping
   pageFlip.on("changeState", (e) => {
     state.isFlipping = (e?.data === "flipping");
     updateNav();
@@ -235,7 +232,6 @@ function updateNav(){
 
   const q = QUESTIONS[state.step];
   const has = Boolean(state.answers[q.id]);
-
   els.nextBtn.disabled = state.isFlipping || !has;
   els.nextBtn.setAttribute("aria-disabled", String(els.nextBtn.disabled));
   els.nextBtn.textContent = (state.step===QUESTIONS.length-1) ? "Finish" : "Next";
@@ -309,27 +305,26 @@ function onKeyDown(e){
 /* ---- Scoring ---- */
 function answersToTraits(ans){
   const t={calm:0,tense:0,comfort:0,curious:0,low:0,energy:0,real:0,surreal:0,fantasy:0,history:0,language:0,plot:0,characters:0,ideas:0,open:0,hope:0,honest:0};
-  // q1
   if (ans.q1==="A") t.calm+=2;
   if (ans.q1==="B") t.tense+=2;
   if (ans.q1==="C") t.comfort+=2;
   if (ans.q1==="D") t.curious+=2;
-  // q2
+
   if (ans.q2==="A") t.low+=2;
   if (ans.q2==="B") {t.low+=1; t.energy+=1;}
   if (ans.q2==="C") t.energy+=1;
   if (ans.q2==="D") t.energy+=2;
-  // q3
+
   if (ans.q3==="A") t.real+=2;
   if (ans.q3==="B") {t.real+=1; t.surreal+=1;}
   if (ans.q3==="C") t.fantasy+=2;
   if (ans.q3==="D") t.history+=2;
-  // q4
+
   if (ans.q4==="A") t.language+=2;
   if (ans.q4==="B") t.plot+=2;
   if (ans.q4==="C") t.characters+=2;
   if (ans.q4==="D") t.ideas+=2;
-  // q5
+
   if (ans.q5==="A") t.open+=2;
   if (ans.q5==="B") t.hope+=2;
   if (ans.q5==="C") t.honest+=2;
@@ -387,7 +382,7 @@ function stripHtml(s){ return (s||"").replace(/<[^>]+>/g,""); }
 function truncate(s,n){ return s.length>n ? s.slice(0,n).trimEnd()+"…" : s; }
 
 async function finishQuiz(avoidId=null){
-  showScreen("result");
+  showResult();
 
   els.resTitle.textContent="Loading…";
   els.resMeta.textContent="";
@@ -450,18 +445,7 @@ function renderResult(book){
   els.resTitle.focus();
 }
 
-/* ---- Home open animation ---- */
-function openHomeBookAndStart(withDemo){
-  const reduced = prefersReducedMotion();
-  if (els.book3d && !reduced){
-    els.book3d.classList.add("is-open");
-    setTimeout(()=>startQuiz(withDemo), 620);
-  } else {
-    startQuiz(withDemo);
-  }
-}
-
-/* ---- Start/reset ---- */
+/* ---- Start (direct) ---- */
 function resetQuiz(){
   state.step=0;
   state.answers={};
@@ -484,31 +468,18 @@ function applySelections(){
   updateNav();
 }
 
-function startQuiz(withDemo){
+function startDirectQuiz(){
   resetQuiz();
-  showScreen("quiz");
+  showOnlyQuiz();
   initFlip();
   buildQuestions();
 
-  if (withDemo){
-    for (const q of QUESTIONS){
-      const idx = Math.floor(Math.random()*4);
-      state.answers[q.id] = String.fromCharCode(65+idx);
-    }
-    state.activeOptionIndex=0;
-  }
-
-  // mine kohe esimese küsimuse lehele (parem leht)
   pageFlip.turnToPage(1);
   syncFromPage(1);
   applySelections();
 }
 
 /* ---- Events ---- */
-els.startBtn?.addEventListener("click", ()=>openHomeBookAndStart(false));
-els.startInlineBtn?.addEventListener("click", ()=>openHomeBookAndStart(false));
-els.demoBtn?.addEventListener("click", ()=>openHomeBookAndStart(true));
-
 els.backBtn?.addEventListener("click", goBack);
 els.nextBtn?.addEventListener("click", goNext);
 document.addEventListener("keydown", onKeyDown);
@@ -528,12 +499,10 @@ els.toggleDescBtn?.addEventListener("click", ()=>{
 });
 
 els.againBtn?.addEventListener("click", ()=>{
-  if (els.book3d) els.book3d.classList.remove("is-open");
   resetQuiz();
-  showScreen("home");
-  document.getElementById("homeTitle")?.focus();
+  startDirectQuiz();
 });
 
 els.anotherBtn?.addEventListener("click", ()=>finishQuiz(state.lastChosenId));
 
-showScreen("home");
+document.addEventListener("DOMContentLoaded", startDirectQuiz);
