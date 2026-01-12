@@ -552,3 +552,7 @@ a{color:inherit}
   display: grid;
   place-items: center;
 }
+/* peida 1/5 (progressText), sest topbar juba näitab */
+#progressText {
+  display: none !important;
+}

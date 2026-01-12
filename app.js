@@ -11,12 +11,58 @@
 ========================================================= */
 
 const QUESTIONS = [
-  { id: "q1", text: "Kuidas sa tahad, et see raamat sind tunneks paneks?", options: ["Rahulikult mõtlema","Natuke ärevaks, aga põnevil","Lohtuma ja hoituna","Uudishimulikuks ja erksaks"]},
-  { id: "q2", text: "Kui palju energiat sul lugemiseks tegelikult on?", options: ["Väga vähe – paar lehekülge korraga","Natuke – hea peatükk korraga","Paras – võin süveneda","Palju – anna mulle midagi mahukat"]},
-  { id: "q3", text: "Milline maailm sind praegu kõige rohkem tõmbab?", options: ["Täiesti realistlik ja tänapäevane","Veidi nihkes, aga äratuntav","Täiesti teine maailm","Ajalooline või kauge aeg"]},
-  { id: "q4", text: "Mis on sinu jaoks raamatus praegu kõige olulisem?", options: ["Keel ja atmosfäär","Lugu ja pinge","Tegelased ja nende suhted","Ideed ja mõtted"]},
-  { id: "q5", text: "Kuidas sa tahaksid, et raamat lõppeks?", options: ["Vaikselt ja lahtiselt","Selge ja lootusrikkalt","Üllatavalt või valusalt ausalt","Pole vahet – teekond on olulisem"]}
+  {
+    id: "q1",
+    text: "How would you like this book to make you feel?",
+    options: [
+      "Calm, reflective, and unhurried",
+      "Slightly tense, but engaged",
+      "Comforted and gently held",
+      "Alert, curious, and awake"
+    ]
+  },
+  {
+    id: "q2",
+    text: "How much mental energy do you have for reading right now?",
+    options: [
+      "Very little — a few pages at a time",
+      "Some — a chapter here and there",
+      "A fair amount — I can properly focus",
+      "Plenty — I want something immersive"
+    ]
+  },
+  {
+    id: "q3",
+    text: "What kind of world are you drawn to at the moment?",
+    options: [
+      "Grounded in everyday reality",
+      "Slightly off-kilter, but recognisable",
+      "Entirely otherworldly",
+      "Historical or far removed from the present"
+    ]
+  },
+  {
+    id: "q4",
+    text: "What matters most to you in a book right now?",
+    options: [
+      "Language, mood, and atmosphere",
+      "Narrative drive and tension",
+      "Characters and their inner lives",
+      "Ideas that linger after reading"
+    ]
+  },
+  {
+    id: "q5",
+    text: "How would you like the book to conclude?",
+    options: [
+      "Quietly, leaving space for reflection",
+      "Clearly and with a sense of hope",
+      "Unexpectedly or with honest weight",
+      "The ending matters less than the journey"
+    ]
+  }
 ];
+
 
 // 30 picks (simple trait tags for scoring)
 const SHORTLIST = [
