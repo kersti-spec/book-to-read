@@ -173,6 +173,48 @@ function buildQuestions(){
       group.appendChild(btn);
     });
   });
+
+    // ALSO build the first question on the HOME right page (behind the cover)
+  const homeTitle = document.getElementById("home-q-title-0");
+  const homeGroup = document.getElementById("home-options-0");
+  if (homeTitle && homeGroup) {
+    const q0 = QUESTIONS[0];
+    homeTitle.textContent = q0.text;
+    homeGroup.innerHTML = "";
+
+    q0.options.forEach((label, idx) => {
+      const key = String.fromCharCode(65 + idx);
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "option";
+      btn.setAttribute("role", "radio");
+      btn.dataset.step = "0";
+      btn.dataset.index = String(idx);
+      btn.dataset.key = key;
+      btn.setAttribute("aria-checked", "false");
+      btn.tabIndex = -1;
+      btn.innerHTML = `<span class="option__key">${key}</span> ${label}`;
+
+      btn.addEventListener("click", () => {
+        // Save answer like normal
+        state.answers[QUESTIONS[0].id] = key;
+
+        // Update aria states in home
+        const radios = Array.from(homeGroup.querySelectorAll('[role="radio"]'));
+        radios.forEach((el, j) => {
+          const checked = j === idx;
+          el.setAttribute("aria-checked", checked ? "true" : "false");
+          el.tabIndex = checked ? 0 : -1;
+        });
+
+        // Enable start (optional)
+        els.startBtn?.focus();
+      });
+
+      homeGroup.appendChild(btn);
+    });
+  }
+
 }
 
 function setAnswer(stepIndex, optionIndex, fromMouse){
@@ -506,3 +548,15 @@ els.againBtn?.addEventListener("click", ()=>{
 els.anotherBtn?.addEventListener("click", ()=>finishQuiz(state.lastChosenId));
 
 document.addEventListener("DOMContentLoaded", startDirectQuiz);
+
+showScreen("home");
+buildQuestions();
+
+document.addEventListener("keydown", (e) => {
+  if (state.screen !== "home") return;
+  if (e.key === "Enter") {
+    e.preventDefault();
+    els.startBtn?.click();
+  }
+});
+
